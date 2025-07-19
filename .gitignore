@@ -6,7 +6,7 @@ crash.log
 *.tfvars
 *.tfvars.json
 terraform.tfvars
-.terraform.lock.hcl
+.terraform.lock.hcl 
 override.tf
 override.tf.json
 *_override.tf
