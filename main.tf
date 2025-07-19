@@ -16,5 +16,10 @@ provider "aws" {
 
 resource "aws_s3_bucket" "my-bucket" {
   bucket = "my-bucket409854"
-  
+}
+
+resource "aws_s3_object" "my-object" {
+  bucket = aws_s3_bucket.my-bucket.bucket
+  source = "./myTextfile"
+  key = "myfile"
 }
