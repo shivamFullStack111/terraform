@@ -77,3 +77,8 @@ resource "aws_s3_bucket_website_configuration" "example" {
     suffix = "index.html"
   }
 }
+
+# this print endpoint/url of static website hosting
+output "print-static-website-endpoint" {
+  value = aws_s3_bucket_website_configuration.example.website_endpoint
+}
