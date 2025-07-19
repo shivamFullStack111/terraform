@@ -1,10 +1,11 @@
-// variable 
-variable "reusable_region" {
-  type        = string
-  description = "this is reusable region"
-  default     = "ap-south-1"
+// output start ----------------
 
+output "my-instence-id" {
+  value = aws_instance.my-instence.id
 }
+
+// output end ----------------------------
+
 
 
 terraform {
@@ -16,8 +17,9 @@ terraform {
   }
 }
 
+
 provider "aws" {
-  region = var.reusable_region // use custom variable 
+  region = "ap-south-1" // use custom variable 
 }
 
 resource "aws_instance" "my-instence" {
