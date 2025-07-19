@@ -1,5 +1,3 @@
-
-
 terraform {
   required_providers {
     aws = {
@@ -7,10 +5,13 @@ terraform {
       version = "6.4.0"
     }
 
-    random = { // for random provider
-      source  = "hashicorp/random"
-      version = "3.7.2"
-    }
+  }
+
+  # this store .tfstate file in s3 and directly use from the bucket 
+  backend "s3" {
+    region = "ap-south-1"
+    bucket = "my-buckert-483943" // bucket name 
+    key    = "terraform.tfstate" // .tfstate filename that store in s3 
   }
 }
 
@@ -18,23 +19,9 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# random id generate 
-resource "random_id" "randomId" {
-  byte_length = 4
-}
-
-# test the random id by print 
-output "random-id-output" {
-  value = random_id.randomId.dec
+resource "aws_instance" "my-server" {
+  ami           = "ami-0a1235697f4afa8a4"
+  instance_type = "t2.nano"
 }
 
 
-resource "aws_s3_bucket" "my-bucket" {
-  bucket = "my-bucket-${random_id.randomId.b64_url}" // use random id to avoid duplicate s3 bucket
-}
-
-resource "aws_s3_object" "my-object" {
-  bucket = aws_s3_bucket.my-bucket.bucket
-  source = "./myTextfile"
-  key    = "myfile"
-}
