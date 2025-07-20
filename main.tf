@@ -4,7 +4,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "6.4.0"
     }
-  
+
   }
   backend "s3" {
     region = "ap-south-1"
@@ -71,4 +71,12 @@ resource "aws_route_table_association" "my-route-table-association" {
   route_table_id = aws_route_table.my-route-table.id
 }
 
-
+# creating ec2 instance in vpc
+resource "aws_instance" "my-instance" {
+  ami           = "ami-0a1235697f4afa8a4"
+  instance_type = "t2.nano"
+  subnet_id = aws_subnet.public-subnet.id
+  tags = {
+    Name = "my-instance-01"
+  }
+}
