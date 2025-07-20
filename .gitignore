@@ -16,3 +16,6 @@ override.tf.json
 *.DS_Store
 .idea/
 .vscode/
+
+index.html
+index.css
