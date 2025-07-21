@@ -17,21 +17,31 @@ provider "aws" {
   region = "ap-south-1"
 }
 
+# fetch AMI from AWS using data source
+data "aws_ami" "example" {
+  most_recent = true
+  owners      = ["amazon"]
+}
 
-resource "aws_instance" "my-instance-01" {
-  ami                         = "ami-0a1235697f4afa8a4"
-  instance_type               = "t2.nano"
-  subnet_id                   = aws_subnet.public_subnet.id
-  vpc_security_group_ids      = [aws_security_group.my_security_group.id]
-  associate_public_ip_address = true
-  user_data                   = <<-EOF
-  #!/bin/bash
-  sudo yum update -y 
-  sudo yum install nginx -y
-  sudo systemctl start nginx
-  EOF
-
+# fetch my security groups using data source
+data "aws_security_group" "my_security_group" {
   tags = {
-    Name = "my-instance-01"
+    sg = "my-sg"
   }
+}
+# fetch default VPC using data source
+data "aws_vpc" "default_vpc" {
+  tags = {
+    default = "default-vpc"
+  }
+}
+
+output "AMI-ID" {
+  value = data.aws_ami.example.name
+}
+output "my-SG" {
+  value = data.aws_security_group.my_security_group.id
+}
+output "default-vpc" {
+  value = data.aws_vpc.default_vpc.id
 }
