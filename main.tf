@@ -17,31 +17,49 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# fetch AMI from AWS using data source
-data "aws_ami" "example" {
-  most_recent = true
-  owners      = ["amazon"]
-}
-
-# fetch my security groups using data source
-data "aws_security_group" "my_security_group" {
+# fetch vpc 
+data "aws_vpc" "my-vpc" {
   tags = {
-    sg = "my-sg"
+    Name = "my-vpc"
   }
 }
-# fetch default VPC using data source
-data "aws_vpc" "default_vpc" {
+# fetch security group NOTE: security must be in same vpc in which subnet is 
+data "aws_security_group" "my-security-group" {
   tags = {
-    default = "default-vpc"
+    Name = "my-security-group"
   }
 }
 
-output "AMI-ID" {
-  value = data.aws_ami.example.name
+# fetch subnet  NOTE: subnet must be in same vpc in which security group is 
+data "aws_subnet" "vpc-public-subnet" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.my-vpc.id]
+  }
+  tags = {
+    Name = "public-subnet"
+  }
 }
-output "my-SG" {
-  value = data.aws_security_group.my_security_group.id
+
+# creating instance by using data source data 
+resource "aws_instance" "my-instance-01" {
+  ami             = "ami-0a1235697f4afa8a4"
+  instance_type   = "t2.nano"
+  security_groups = [data.aws_security_group.my-security-group.id]
+  subnet_id       = data.aws_subnet.vpc-public-subnet.id
 }
-output "default-vpc" {
-  value = data.aws_vpc.default_vpc.id
+
+
+
+
+# outputs ----------------------------------------------------------------------
+output "name" {
+  value = data.aws_security_group.my-security-group.id
 }
+output "namee" {
+  value = data.aws_vpc.my-vpc.id
+}
+output "nameee" {
+  value = data.aws_subnet.vpc-public-subnet.id
+}
+# -------------------------------------------------------------------------------
