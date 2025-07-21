@@ -17,49 +17,54 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# fetch vpc 
-data "aws_vpc" "my-vpc" {
-  tags = {
-    Name = "my-vpc"
+# this is simple variable
+variable "aws_bucket" {
+  type    = string
+  default = "my-bucket-049438"
+}
+
+# default value is not provided this will ask you value in terminal with their description as a message 
+# or we can provide value in terminal using ENV by writting =>     $env:TF_VAR_aws_ami = "ami-1234567890abcdef" (Windows) ,  export TF_VAR_aws_ami=ami-833773374 (Linux,macOS)  
+variable "aws_ami" {
+  type        = string
+  description = "Enter aws ami for instance"
+}
+
+# when we have to store multiple data in same varibale then use object ACCESS: var.aws_block.name
+variable "aws_block" {
+  type = object({
+    name  = string
+    class = string
+  })
+
+  default = {
+    name  = "Shivam"
+    class = "+2 Arts"
   }
 }
-# fetch security group NOTE: security must be in same vpc in which subnet is 
-data "aws_security_group" "my-security-group" {
-  tags = {
-    Name = "my-security-group"
+
+# map which is key value pair 
+variable "map_variable" {
+  type = map(string)
+  default = {
+    "this_is_key" = "this_is_value"
   }
 }
 
-# fetch subnet  NOTE: subnet must be in same vpc in which security group is 
-data "aws_subnet" "vpc-public-subnet" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.my-vpc.id]
-  }
-  tags = {
-    Name = "public-subnet"
-  }
-}
-
-# creating instance by using data source data 
-resource "aws_instance" "my-instance-01" {
-  ami             = "ami-0a1235697f4afa8a4"
-  instance_type   = "t2.nano"
-  security_groups = [data.aws_security_group.my-security-group.id]
-  subnet_id       = data.aws_subnet.vpc-public-subnet.id
-}
 
 
 
 
-# outputs ----------------------------------------------------------------------
-output "name" {
-  value = data.aws_security_group.my-security-group.id
+# outputs-----------------------------------------------------------------------
+
+output "ami" {
+  value = var.aws_ami
 }
-output "namee" {
-  value = data.aws_vpc.my-vpc.id
+output "aws_block" {
+  value = "studnet details => Name: ${var.aws_block.name}, Class: ${var.aws_block.class}"
 }
-output "nameee" {
-  value = data.aws_subnet.vpc-public-subnet.id
+output "map_variable" {
+  value = var.map_variable
 }
-# -------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
