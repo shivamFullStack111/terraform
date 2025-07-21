@@ -57,6 +57,9 @@ variable "map_variable" {
 
 # outputs-----------------------------------------------------------------------
 
+output "aws_bucket" {
+  value = var.aws_bucket
+}
 output "ami" {
   value = var.aws_ami
 }
