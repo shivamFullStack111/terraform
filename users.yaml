@@ -1,4 +1,10 @@
 users:
   - username: "shivam"
+    roles: ["AdministratorAccess","AmazonS3FullAccess"]
+
   - username: "ram"
+    roles: ["AmazonEC2FullAccess"]
+
   - username: "sham"
+    roles: ["AmazonS3FullAccess"]
+
