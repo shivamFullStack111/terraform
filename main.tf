@@ -11,30 +11,46 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-variable "ami_map" {
-  type = map(object({
-    ami           = string
-    instance_type = string
-  }))
+# this block fetch users from users.yaml file 
+# using file() function it require users but it comes in yaml format 
+# yamldecode() function decode yaml code to HCL and it return an array 
+# toset() is used to create set of users username 
+locals {
+  users = toset(yamldecode(file("./users.yaml")).users[*].username)
+}
 
-  default = {
-    "amazon" = {
-      ami           = "ami-0b32d400456908bf9"
-      instance_type = "t2.nano"
-    }
-    "ubuntu" = {
-      ami           = "ami-0f918f7e67a3323f0"
-      instance_type = "t2.nano"
-    }
+# this block create users by using for_each to create multiple users 
+resource "aws_iam_user" "users" {
+  for_each      = local.users
+  name          = each.key
+  force_destroy = true
+
+}
+
+# this block create password of users 
+resource "aws_iam_user_login_profile" "users_login_data" {
+  for_each        = aws_iam_user.users
+  user            = each.key
+  password_length = 8 // password generate automatically of length 8
+
+
+  # this block avoid changes fields that mention below when code run again 
+  lifecycle {
+    ignore_changes = [
+      password_length,
+      password_reset_required,
+    ]
   }
 }
 
-
-resource "aws_instance" "my-instance" {
-  for_each      = var.ami_map // for each work with only set or map
-  ami           = each.value.ami
-  instance_type = each.value.instance_type
-  tags = {
-    "Name" = "my-instance-${index(keys(var.ami_map), each.key)}-ami=>${each.key}" // in this we find index of current iteration key keys() get all keys from map and index find(map,single_key) this find current key index from map
-  }
+output "users" {
+  value = aws_iam_user.users
 }
+
+output "users_logins" {
+  value = aws_iam_user_login_profile.users_login_data
+}
+
+
+
+# NOTE:  password will store in terraform.tfstate 
