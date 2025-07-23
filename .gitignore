@@ -17,8 +17,5 @@ override.tf.json
 .idea/
 .vscode/
 
-index.html
-index.css
+
 .terraform
-.vpc
-vpc
