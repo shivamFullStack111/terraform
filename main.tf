@@ -2,53 +2,42 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Step 1: Create a Security Group
-resource "aws_security_group" "web_sg" {
-  name        = "web-sg"
-  description = "Allow SSH and HTTP"
-  vpc_id      = "vpc-xxxxxxxx" # <-- replace with your actual VPC ID
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t2.micro"
 
-  ingress {
-    description = "Allow SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "WebSG"
+  validation {
+    condition     = contains(["t2.micro", "t3.micro"], var.instance_type)
+    error_message = "Only 't2.micro' or 't3.micro' instance types are allowed."
   }
 }
 
-# Step 2: Launch EC2 instance that depends explicitly on the security group
-resource "aws_instance" "web_server" {
-  ami           = "ami-0c94855ba95c71c99" # <-- Amazon Linux 2 AMI (update per region)
-  instance_type = "t2.micro"
-  subnet_id     = "subnet-xxxxxxxx"      # <-- replace with your actual Subnet ID
-  key_name      = "your-key-name"        # <-- replace with your EC2 key pair name
-
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
+resource "aws_instance" "validated_instance" {
+  ami                    = "ami-0c94855ba95c71c99" # Replace with a valid AMI for your region
+  instance_type          = var.instance_type
+  subnet_id              = "subnet-xxxxxxxx"       # Replace with your actual subnet
+  vpc_security_group_ids = ["sg-xxxxxxxx"]         # Replace with your actual security group
+  key_name               = "your-key-name"         # Replace with your key pair
 
   tags = {
-    Name = "DependsOnEC2"
+    Name = "ValidatedEC2"
   }
 
-  # 👇 Explicit dependency
-  depends_on = [aws_security_group.web_sg]
+  lifecycle {
+    # ✅ Precondition: restrict allowed instance types before creation
+    precondition {
+      condition     = contains(["t2.micro", "t3.micro"], var.instance_type)
+      error_message = "Precondition failed: instance_type must be 't2.micro' or 't3.micro'"
+    }
+
+    # ✅ Postcondition: ensure instance is created in specific AZ
+    postcondition {
+      condition     = self.availability_zone == "us-east-1a"
+      error_message = "Postcondition failed: instance must be created in us-east-1a"
+
+      # ⚠️ NOTE: If this condition fails, Terraform will destroy the EC2 instance immediately.
+      #         It will not remain in the final state, even though it was temporarily created.
+    }
+  }
 }
