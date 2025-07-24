@@ -1,64 +1,36 @@
-# ----------------------------------------
-# AWS Provider Block
-# ----------------------------------------
 provider "aws" {
-  region = "ap-south-1"  # 👈 This sets the AWS region where all resources will be deployed (Mumbai region)
+  region = "us-east-1"
 }
 
-# ----------------------------------------
-# VPC Module Block
-# ----------------------------------------
-module "vpc_module" {
-  source = "./module/vpc"  # 👈 Refers to a local Terraform module located in 'module/vpc' directory
+resource "aws_s3_bucket" "example_bucket" {
+  bucket = "shivam-lifecycle-demo-bucket"
+  force_destroy = false
 
-  # -------------------------------
-  # List of Subnets to be created
-  # -------------------------------
-  subnet_config = [
-    {
-      availability_zone = "ap-south-1a",     # 👈 First subnet in AZ 'a'
-      cidr_block        = "10.0.0.0/24"      # 👈 256 IPs in this range
-    },
-    {
-      availability_zone = "ap-south-1b",     # 👈 Second subnet in AZ 'b'
-      cidr_block        = "10.0.1.0/24"
-    },
-    {
-      availability_zone = "ap-south-1c",     # 👈 Third subnet in AZ 'c'
-      cidr_block        = "10.0.2.0/24",
-      is_public         = true              # ✅ This subnet is marked public. Useful for EC2s that need internet
-    },
-  ]
-
-  # -------------------------------
-  # VPC Configuration
-  # -------------------------------
-  vpc_config = {
-    cidr_block = "10.0.0.0/16",   # 👈 Full VPC has 65536 IPs (large private IP block)
-    name       = "vpc-test"       # 👈 Name tag used in resources for identification
+  tags = {
+    Name        = "LifecycleBucket"
+    Environment = "Dev"
   }
-}
 
-  # -------------------------------
-  # Outputs
-  # -------------------------------
+  lifecycle {
+    # 🛑 prevent_destroy:
+    # Prevents accidental deletion of the S3 bucket.
+    # If someone tries to delete this bucket using 'terraform destroy', an error will be thrown.
+    prevent_destroy = true
 
-output "vpc" {
-  value = module.vpc_module.vpc
-}
+    # 🔁 create_before_destroy:
+    # When changes require replacing this bucket, Terraform will create the new one first,
+    # then destroy the old one. This avoids service downtime.
+    create_before_destroy = true
 
-output "all_subnets" {
-  value = module.vpc_module.all_subnets
-}
+    # 🎯 ignore_changes:
+    # If the tags are changed manually (e.g., via AWS Console),
+    # Terraform will ignore those changes during future plans.
+    ignore_changes = [
+      tags
+    ]
 
-output "route_table" {
-  value = module.vpc_module.route_table
-}
-
-output "internet_gateway" {
-  value = module.vpc_module.internet_gateway
-}
-
-output "associations" {
-  value = module.vpc_module.associations
+    # 🔄 replace_triggered_by:
+    # This forces the S3 bucket to be recreated if the "tags.Name" value changes.
+    replace_triggered_by = ["tags.Name"]
+  }
 }
