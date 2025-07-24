@@ -38,3 +38,27 @@ module "vpc_module" {
     name       = "vpc-test"       # 👈 Name tag used in resources for identification
   }
 }
+
+  # -------------------------------
+  # Outputs
+  # -------------------------------
+
+output "vpc" {
+  value = module.vpc_module.vpc
+}
+
+output "all_subnets" {
+  value = module.vpc_module.all_subnets
+}
+
+output "route_table" {
+  value = module.vpc_module.route_table
+}
+
+output "internet_gateway" {
+  value = module.vpc_module.internet_gateway
+}
+
+output "associations" {
+  value = module.vpc_module.associations
+}
